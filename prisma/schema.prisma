@@ -1,0 +1,146 @@
+// Prodigio — Sistema de Reservas
+// Connect via DATABASE_URL in .env.local
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("staff") // "admin" | "staff"
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservationsCreated Reservation[] @relation("CreatedBy")
+  reservationsUpdated Reservation[] @relation("UpdatedBy")
+}
+
+model Table {
+  id          String  @id @default(cuid())
+  nombre      String  @unique  // "M1", "T3", "T14"…
+  capacidad   Int
+  zona        String           // "salon_interno" | "terraza"
+  tipo        String           // "M" | "T"
+  activa      Boolean @default(true)
+  reservable  Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  reservationTables ReservationTable[]
+  blocks            TableBlock[]
+}
+
+model Reservation {
+  id               String   @id @default(cuid())
+  nombreCliente    String
+  telefono         String
+  personas         Int
+  fechaInicio      DateTime
+  fechaFin         DateTime
+  estado           String   @default("pendiente") // pendiente | confirmada | cancelada | finalizada | no_asistio
+  zona             String
+  ocasionEspecial  String?
+  estadoPago       String   @default("sin_pago")  // sin_pago | abono_pendiente | abono_pagado | pagado_total
+  notas            String?
+  fuente           String   @default("admin")     // ia_whatsapp | admin | staff
+  reminderSent24h  Boolean  @default(false)
+  reminderSent2h   Boolean  @default(false)
+  noShowMsgSent    Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  createdById      String?
+  updatedById      String?
+  createdBy        User?    @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedBy        User?    @relation("UpdatedBy", fields: [updatedById], references: [id])
+
+  tables           ReservationTable[]
+  preOrder         PreOrder?
+}
+
+model ReservationTable {
+  id            String      @id @default(cuid())
+  reservationId String
+  tableId       String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  table         Table       @relation(fields: [tableId],       references: [id])
+
+  @@unique([reservationId, tableId])
+}
+
+model Event {
+  id                   String   @id @default(cuid())
+  nombre               String
+  empresaPersona       String
+  personas             Int
+  fechaInicio          DateTime
+  fechaFin             DateTime
+  tipoEvento           String
+  opcionMenu           String   @default("sin_definir") // menu_90k | menu_75k | sin_definir
+  estadoPago           String   @default("sin_pago")
+  montoTotal           Float?
+  montoAbono           Float?
+  necesidadesEspeciales String?
+  notas                String?
+  estado               String   @default("pendiente")  // pendiente | confirmado | cancelado | finalizado
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model AIAnalyticsLog {
+  id                  String   @id @default(cuid())
+  fecha               DateTime @default(now())
+  conversaciones      Int      @default(0)
+  reservasCreadas     Int      @default(0)
+  eventosCreados      Int      @default(0)
+  cancelaciones       Int      @default(0)
+  tasaConversion      Float    @default(0)
+  tiempoRespuestaMin  Float    @default(0)
+}
+
+model PreOrder {
+  id            String      @id @default(cuid())
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  items         String      // JSON: [{producto, cantidad, observaciones}]
+  notas         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model TableBlock {
+  id        String   @id @default(cuid())
+  tableId   String
+  table     Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  inicio    DateTime
+  fin       DateTime
+  motivo    String?
+  createdAt DateTime @default(now())
+}
+
+model SpecialDay {
+  id        String   @id @default(cuid())
+  nombre    String
+  fecha     DateTime // fecha exacta del día especial
+  tipo      String   @default("solo_manual") // solo_manual | bloqueado_total
+  notas     String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // "CREATE_RESERVATION" | "UPDATE_RESERVATION" | "CANCEL_RESERVATION" …
+  entityType String
+  entityId   String
+  details    String?
+  createdAt  DateTime @default(now())
+}

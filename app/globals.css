@@ -1,0 +1,227 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+:root {
+  --bg-base:     #111112;
+  --bg-elevated: #19191c;
+  --bg-card:     #19191c;
+  --bg-sidebar:  #0c0c0d;
+  --bg-hover:    #222226;
+  --border:      rgba(255, 255, 255, 0.07);
+  --border-hover:rgba(255, 255, 255, 0.13);
+  --gold:        #ccc79f;
+  --gold-light:  #e8e5dc;
+  --text-base:   #f2efe8;
+  --text-muted:  rgba(242, 239, 232, 0.55);
+  --text-faint:  rgba(242, 239, 232, 0.30);
+  --sage:        #95be9a;
+  --coral:       #cf5f56;
+  --wine:        #522b38;
+}
+
+/* ── Light mode ───────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-base:     #f7f6f3;
+  --bg-elevated: #ffffff;
+  --bg-card:     #ffffff;
+  --bg-sidebar:  #edebe5;
+  --bg-hover:    #e5e2d9;
+  --border:      rgba(0, 0, 0, 0.20);
+  --border-hover:rgba(0, 0, 0, 0.36);
+  --gold:        #6d6030;
+  --gold-light:  #4e4520;
+  --text-base:   #17150e;
+  --text-muted:  rgba(23, 21, 14, 0.58);
+  --text-faint:  rgba(23, 21, 14, 0.40);
+  --sage:        #286e33;
+  --coral:       #b02a20;
+  --wine:        #62162a;
+}
+
+/* Override hardcoded dark Tailwind classes so light mode text is always legible */
+[data-theme="light"] [class*="text-[#f2efe8"] {
+  color: var(--text-base);
+}
+[data-theme="light"] [class*="text-[rgba(242,239,232"] {
+  color: var(--text-muted);
+}
+[data-theme="light"] [class*="bg-[#19191c]"] {
+  background-color: var(--bg-card);
+}
+[data-theme="light"] [class*="bg-[#111112]"] {
+  background-color: var(--bg-base);
+}
+[data-theme="light"] [class*="bg-[#0c0c0d]"] {
+  background-color: var(--bg-sidebar);
+}
+[data-theme="light"] [class*="bg-[#2d2d32]"] {
+  background-color: var(--bg-hover);
+}
+[data-theme="light"] [class*="bg-[#222226]"] {
+  background-color: var(--bg-hover);
+}
+[data-theme="light"] [class*="border-[rgba(255,255,255"] {
+  border-color: var(--border);
+}
+[data-theme="light"] [class*="shadow-black"] {
+  --tw-shadow-color: rgba(0,0,0,0.12);
+}
+/* Inline-style borders (style={{ borderColor: '...' }}) — !important overrides inline */
+[data-theme="light"] [style*="border-color"] {
+  border-color: rgba(0, 0, 0, 0.20) !important;
+}
+/* Semi-transparent dark overlays become light in light mode */
+[data-theme="light"] [class*="bg-[rgba(0,0,0"] {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] [class*="bg-black"] {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+/* Mesa/status card borders — make them solid so M1, M2, etc. stand out clearly */
+/* Status text — 400 shades are too light on white, use 700 for legibility */
+[data-theme="light"] [class*="text-emerald-400"]  { color: #047857; }
+[data-theme="light"] [class*="text-red-400"]      { color: #b91c1c; }
+[data-theme="light"] [class*="text-amber-400"]    { color: #b45309; }
+[data-theme="light"] [class*="text-gray-400"]     { color: #4b5563; }
+[data-theme="light"] [class*="text-purple-400"]   { color: #7c3aed; }
+[data-theme="light"] [class*="text-rose-300"]     { color: #be123c; }
+/* Mesa/status card borders — make them solid so M1, M2, etc. stand out clearly */
+[data-theme="light"] [class*="border-emerald-500"] { border-color: #059669; }
+[data-theme="light"] [class*="border-red-500"]     { border-color: #dc2626; }
+[data-theme="light"] [class*="border-amber-500"]   { border-color: #d97706; }
+[data-theme="light"] [class*="border-gray-500"]    { border-color: #6b7280; }
+[data-theme="light"] [class*="border-gray-700"]    { border-color: #374151; }
+/* Also boost the bg tint so cards have a visible fill */
+[data-theme="light"] [class*="bg-emerald-500"]     { background-color: rgba(5, 150, 105, 0.12); }
+[data-theme="light"] [class*="bg-red-500"]         { background-color: rgba(220, 38,  38,  0.10); }
+[data-theme="light"] [class*="bg-amber-500"]       { background-color: rgba(217, 119, 6,   0.12); }
+[data-theme="light"] [class*="bg-gray-500"]        { background-color: rgba(107, 114, 128, 0.10); }
+[data-theme="light"] [class*="bg-gray-800"]        { background-color: rgba(31,  41,  55,  0.06); }
+
+/* ── Base reset ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-base);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Custom scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: var(--bg-sidebar); }
+::-webkit-scrollbar-thumb  { background: rgba(204, 199, 159, 0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(204, 199, 159, 0.35); }
+
+/* ── Selection ────────────────────────────────────────────────────────────── */
+::selection { background: rgba(204, 199, 159, 0.22); color: var(--text-base); }
+
+/* ── Focus ring ───────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(204, 199, 159, 0.45);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Utility classes ──────────────────────────────────────────────────────── */
+@layer components {
+  /* Cards */
+  .card {
+    @apply border rounded-xl;
+    background-color: var(--bg-card);
+    border-color: var(--border);
+  }
+  .card-hover {
+    @apply transition-colors duration-200;
+  }
+  .card-hover:hover { border-color: var(--border-hover); }
+
+  /* Inputs */
+  .input-base {
+    @apply w-full rounded-lg px-3 py-2 text-sm
+           border transition-colors duration-200 outline-none;
+    background-color: var(--bg-elevated);
+    color: var(--text-base);
+    border-color: var(--border);
+  }
+  .input-base::placeholder { color: var(--text-faint); }
+  .input-base:focus { border-color: rgba(204,199,159,0.45); }
+
+  /* Buttons */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+           text-sm font-medium transition-all duration-200 active:scale-[0.98];
+    background-color: var(--gold);
+    color: var(--bg-sidebar);
+  }
+  .btn-gold:hover { filter: brightness(1.1); }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+           text-sm font-medium transition-all duration-200 border active:scale-[0.98];
+    color: var(--gold);
+    border-color: rgba(204,199,159,0.25);
+  }
+  .btn-outline:hover { background-color: rgba(204,199,159,0.08); }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2
+           text-sm transition-all duration-200 active:scale-[0.98];
+    color: var(--text-muted);
+  }
+  .btn-ghost:hover {
+    color: var(--text-base);
+    background-color: var(--bg-hover);
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+           text-sm font-medium transition-all duration-200 border active:scale-[0.98];
+    background-color: rgba(207,95,86,0.15);
+    color: var(--coral);
+    border-color: rgba(207,95,86,0.30);
+  }
+  .btn-danger:hover { background-color: rgba(207,95,86,0.25); }
+
+  /* Nav links */
+  .nav-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5
+           text-sm font-medium transition-all duration-200;
+    color: var(--text-muted);
+  }
+  .nav-link:hover {
+    color: var(--text-base);
+    background-color: var(--bg-hover);
+  }
+  .nav-link-active {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5
+           text-sm font-medium border-l-2;
+    background-color: rgba(204,199,159,0.10);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border;
+  }
+
+  /* Dividers */
+  .divider {
+    @apply border-t;
+    border-color: var(--border);
+  }
+
+  /* Shake animation for form errors */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.35s ease-in-out; }
+}
