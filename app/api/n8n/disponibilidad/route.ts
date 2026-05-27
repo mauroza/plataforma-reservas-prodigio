@@ -125,7 +125,7 @@ export async function GET(req: Request) {
     }
   }
 
-  const horaFinStr = `${fin.getHours().toString().padStart(2,'0')}:${fin.getMinutes().toString().padStart(2,'0')}`
+  const horaFinStr = fin.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota', hour12: false })
 
   const respuesta: Record<string, unknown> = {
     disponible: combinacionPosible,
