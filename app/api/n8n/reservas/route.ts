@@ -57,24 +57,26 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   if (!auth(req)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const body = await req.json()
-  const {
-    nombreCliente, telefono, personas, fecha, hora,
-    zona, ocasionEspecial, notas,
-  } = body as {
-    nombreCliente: string
-    telefono: string
-    personas: number
-    fecha: string       // YYYY-MM-DD
-    hora: string        // HH:MM  24h
-    zona?: string       // salon_interno | terraza  (opcional — asigna automático)
-    ocasionEspecial?: string
-    notas?: string
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Body inválido — se esperaba JSON' }, { status: 400 })
   }
+
+  const nombreCliente  = body.nombreCliente  as string | undefined
+  const telefono       = body.telefono       as string | undefined
+  const personas       = Number(body.personas)
+  const fecha          = body.fecha          as string | undefined
+  const hora           = body.hora           as string | undefined
+  const zona           = body.zona           as string | undefined
+  const ocasionEspecial = body.ocasionEspecial as string | undefined
+  const notas          = body.notas          as string | undefined
 
   if (!nombreCliente || !telefono || !personas || !fecha || !hora) {
     return NextResponse.json({
       error: 'Faltan campos requeridos: nombreCliente, telefono, personas, fecha, hora',
+      recibido: { nombreCliente, telefono, personas, fecha, hora },
     }, { status: 400 })
   }
 
@@ -164,7 +166,9 @@ export async function POST(req: Request) {
 
   const zonaFinal = mesasAsignar[0].zona
 
-  const reserva = await prisma.reservation.create({
+  let reserva: Awaited<ReturnType<typeof prisma.reservation.create>>
+  try {
+    reserva = await prisma.reservation.create({
     data: {
       nombreCliente: nombreCliente.trim(),
       telefono: telefono.replace(/\D/g, ''),
@@ -182,6 +186,10 @@ export async function POST(req: Request) {
       tables: { include: { table: { select: { nombre: true, zona: true } } } },
     },
   })
+  } catch (err) {
+    console.error('[POST /api/n8n/reservas]', err)
+    return NextResponse.json({ error: 'Error al crear la reserva en la base de datos', detalle: String(err) }, { status: 500 })
+  }
 
   const nombresM = reserva.tables.map(t => t.table.nombre).join(' + ')
   const combinadas = mesasAsignar.length > 1
