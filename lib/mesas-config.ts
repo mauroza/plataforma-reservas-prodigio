@@ -14,12 +14,12 @@ export const COMBINACIONES: Record<string, string[]> = {
   M9:  ['M10', 'M2'],
   M10: ['M9'],
   T11: ['T12', 'T13', 'T14', 'T15', 'T16', 'T17'],
-  T12: ['T11', 'T13'],
-  T13: ['T11', 'T12'],
+  T12: ['T11'],
+  T13: ['T11'],
   T14: ['T11'],     // solo se une a T11 para grupos grandes; no se reserva sola
   T15: ['T11', 'T16', 'T17'],
-  T16: ['T11', 'T15', 'T17'],
-  T17: ['T11', 'T15', 'T16'],
+  T16: ['T11', 'T15'],
+  T17: ['T11', 'T15'],
 }
 
 // Verifica si un conjunto de mesas puede combinarse entre sí
