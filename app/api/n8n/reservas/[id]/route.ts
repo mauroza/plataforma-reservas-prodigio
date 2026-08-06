@@ -72,6 +72,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     zona: reserva.zona,
     mesas: reserva.tables.map(t => t.table.nombre),
     ocasionEspecial: reserva.ocasionEspecial,
+    alergenos: reserva.alergenos,
     notas: reserva.notas,
   })
 }

@@ -21,7 +21,7 @@ const rules = [
   { label: 'Duración 7+ personas',       value: '2.5 horas' },
   { label: 'Espera antes de liberar',    value: '15 min (mensaje al cliente a los 10 min)' },
   { label: 'T + M combinables',          value: 'No — T son altas, M son bajas' },
-  { label: 'Abono grupos 11-19 personas', value: '$200.000 COP (Bancolombia Ahorros 37363488359)' },
+  { label: 'Abono grupos 11-19 personas', value: '$200.000 COP (Llave: 320 633 9067)' },
   { label: 'Abono eventos (≥20 pers.)',  value: '50% del valor total' },
 ]
 

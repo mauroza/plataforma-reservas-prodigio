@@ -48,6 +48,7 @@ model Reservation {
   estado           String   @default("pendiente") // pendiente | confirmada | cancelada | finalizada | no_asistio
   zona             String
   ocasionEspecial  String?
+  alergenos        String?
   estadoPago       String   @default("sin_pago")  // sin_pago | abono_pendiente | abono_pagado | pagado_total
   notas            String?
   fuente           String   @default("admin")     // ia_whatsapp | admin | staff
@@ -142,5 +143,29 @@ model AuditLog {
   entityType String
   entityId   String
   details    String?
+  createdAt  DateTime @default(now())
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String?
+  costo       Float
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ventas      PackageSale[]
+}
+
+model PackageSale {
+  id         String   @id @default(cuid())
+  packageId  String
+  package    Package  @relation(fields: [packageId], references: [id])
+  cliente    String?
+  cantidad   Int      @default(1)
+  montoTotal Float
+  fecha      DateTime @default(now())
+  notas      String?
   createdAt  DateTime @default(now())
 }

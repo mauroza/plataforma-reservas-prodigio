@@ -48,6 +48,7 @@ export async function GET(req: Request) {
       zona: r.zona,
       mesas: r.tables.map(t => t.table.nombre),
       ocasionEspecial: r.ocasionEspecial ?? null,
+      alergenos: r.alergenos ?? null,
       notas: r.notas ?? null,
     })),
   })
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
     const hora            = String(body.hora           ?? '')
     const zona            = body.zona           ? String(body.zona)            : undefined
     const ocasionEspecial = body.ocasionEspecial ? String(body.ocasionEspecial) : undefined
+    const alergenos       = body.alergenos       ? String(body.alergenos)       : undefined
     const notas           = body.notas           ? String(body.notas)           : undefined
 
     if (!nombreCliente || !telefono || !personas || !fecha || !hora) {
@@ -151,6 +153,7 @@ export async function POST(req: Request) {
         fechaFin:      fin,
         zona:          mesasAsignar[0].zona,
         ocasionEspecial: ocasionEspecial ?? null,
+        alergenos:       alergenos       ?? null,
         notas:           notas           ?? null,
         fuente:  'ia_whatsapp',
         estado:  'pendiente',
@@ -187,11 +190,10 @@ export async function POST(req: Request) {
       respuesta.requiereAbono = true
       respuesta.montoAbono    = ABONO_RESERVA
       respuesta.infoPago = {
-        banco: 'Bancolombia', tipoCuenta: 'Ahorros',
-        numeroCuenta: '3736348835', titular: 'Prodigio Gastro Bar',
-        alternativa: 'También puedes solicitar nuestro QR para pagar por Bre-B',
+        llave: '320 633 9067',
+        titular: 'Prodigio Gastro Bar',
       }
-      respuesta.mensaje = `${respuesta.mensaje} Se requiere abono de $${ABONO_RESERVA.toLocaleString('es-CO')} COP (Bancolombia Ahorros 3736348835).`
+      respuesta.mensaje = `${respuesta.mensaje} Se requiere abono de $${ABONO_RESERVA.toLocaleString('es-CO')} COP (Llave: 320 633 9067).`
     }
 
     return NextResponse.json(respuesta, { status: 201 })

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard, CalendarRange, LayoutGrid,
-  PartyPopper, TrendingUp, Settings, LogOut, UsersRound,
+  PartyPopper, TrendingUp, Settings, LogOut, UsersRound, Package,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Reservaciones',  href: '/reservas',      icon: CalendarRange,   adminOnly: false },
   { label: 'Mesas',          href: '/mesas',         icon: LayoutGrid,      adminOnly: false },
   { label: 'Eventos',        href: '/eventos',       icon: PartyPopper,     adminOnly: false },
+  { label: 'Paquetes',       href: '/paquetes',      icon: Package,         adminOnly: false },
   { label: 'Analíticas',     href: '/analiticas',    icon: TrendingUp,      adminOnly: false },
   { label: 'Usuarios',       href: '/usuarios',      icon: UsersRound,      adminOnly: true  },
   { label: 'Configuración',  href: '/configuracion', icon: Settings,        adminOnly: false },

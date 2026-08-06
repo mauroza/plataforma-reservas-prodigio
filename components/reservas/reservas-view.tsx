@@ -7,7 +7,7 @@ import {
   Phone, Users, CalendarClock, Ban, CheckCircle2,
   ShoppingBag, Trash2, PlusCircle, Loader2,
 } from 'lucide-react'
-import type { Reserva, ReservationStatus, Zone } from '@/types'
+import type { Reserva, ReservationStatus, Zone, PaymentStatus } from '@/types'
 import {
   formatDateTime, formatTime, getReservationStatusStyle, getReservationStatusLabel,
   getPaymentStatusLabel, getPaymentStatusStyle, cn,
@@ -22,6 +22,15 @@ const ZONE_LABEL: Record<Zone, string> = {
   terraza:       'Terraza',
 }
 
+const OCASION_OPTIONS: { value: string; label: string }[] = [
+  { value: '',                     label: 'Ninguna'                 },
+  { value: 'Cumpleaños',           label: 'Cumpleaños'              },
+  { value: 'Aniversario',          label: 'Aniversario'             },
+  { value: 'Grado',                label: 'Grado'                   },
+  { value: 'Baby shower',          label: 'Baby shower'             },
+  { value: 'Despedida de soltero/a', label: 'Despedida de soltero/a' },
+]
+
 const STATUS_OPTIONS: { value: ReservationStatus | 'all'; label: string }[] = [
   { value: 'all',       label: 'Todos los estados' },
   { value: 'confirmada',label: 'Confirmada'         },
@@ -31,11 +40,20 @@ const STATUS_OPTIONS: { value: ReservationStatus | 'all'; label: string }[] = [
   { value: 'no_asistio',label: 'No asistió'         },
 ]
 
+const PAGO_OPTIONS: { value: PaymentStatus | 'all'; label: string }[] = [
+  { value: 'all',             label: 'Todos los pagos'  },
+  { value: 'sin_pago',        label: 'Sin pago'         },
+  { value: 'abono_pendiente', label: 'Abono pendiente'  },
+  { value: 'abono_pagado',    label: 'Abono pagado'     },
+  { value: 'pagado_total',    label: 'Pagado total'     },
+]
+
 export function ReservasView({ initialReservas }: Props) {
   const [reservas,    setReservas]    = useState<Reserva[]>(initialReservas)
   const [search,      setSearch]      = useState('')
   const [status,      setStatus]      = useState<ReservationStatus | 'all'>('all')
   const [zone,        setZone]        = useState<Zone | 'all'>('all')
+  const [pago,        setPago]        = useState<PaymentStatus | 'all'>('all')
   const [selected,    setSelected]    = useState<string | null>(null)
   const [showNew,     setShowNew]     = useState(false)
   const [preOrders,   setPreOrders]   = useState<Record<string, PreOrderItem[]>>({})
@@ -51,9 +69,18 @@ export function ReservasView({ initialReservas }: Props) {
       if (search && !r.nombreCliente.toLowerCase().includes(q) && !r.telefono.includes(q)) return false
       if (status !== 'all' && r.estado !== status) return false
       if (zone   !== 'all' && r.zona   !== zone)   return false
+      if (pago   !== 'all' && r.estadoPago !== pago) return false
       return true
     }).sort((a, b) => new Date(b.fechaInicio).getTime() - new Date(a.fechaInicio).getTime())
-  }, [reservas, search, status, zone])
+  }, [reservas, search, status, zone, pago])
+
+  const pagoCounts = useMemo(() => {
+    const counts: Record<PaymentStatus, number> = {
+      sin_pago: 0, abono_pendiente: 0, abono_pagado: 0, pagado_total: 0,
+    }
+    for (const r of reservas) counts[r.estadoPago]++
+    return counts
+  }, [reservas])
 
   // ── Quick actions con API ────────────────────────────────────────────────
   async function confirmReserva(id: string) {
@@ -170,10 +197,44 @@ export function ReservasView({ initialReservas }: Props) {
           <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#f2efe8]/40 pointer-events-none" />
         </div>
 
+        {/* Payment status filter */}
+        <div className="relative">
+          <select
+            value={pago}
+            onChange={e => setPago(e.target.value as PaymentStatus | 'all')}
+            className="input-base pr-8 appearance-none w-full sm:w-auto cursor-pointer"
+            style={{ minWidth: 160 }}
+          >
+            {PAGO_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#f2efe8]/40 pointer-events-none" />
+        </div>
+
         {/* New button */}
         <button onClick={() => setShowNew(true)} className="btn-gold shrink-0">
           <Plus className="w-4 h-4" /> Nueva reserva
         </button>
+      </div>
+
+      {/* ── Payment summary ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {(Object.entries(pagoCounts) as [PaymentStatus, number][]).map(([st, n]) => (
+          <button
+            key={st}
+            onClick={() => setPago(pago === st ? 'all' : st)}
+            className={cn(
+              'card p-4 flex items-center justify-between text-left transition-all',
+              pago === st && 'ring-1 ring-[#ccc79f]/40',
+            )}
+          >
+            <div>
+              <p className="text-lg font-semibold text-[#f2efe8] leading-none">{n}</p>
+              <p className={cn('text-[10px] mt-0.5', getPaymentStatusStyle(st))}>{getPaymentStatusLabel(st)}</p>
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* Count */}
@@ -316,6 +377,12 @@ export function ReservasView({ initialReservas }: Props) {
                         <p className="text-[10px] uppercase tracking-wider text-[#f2efe8]/30 mb-1">Creada</p>
                         <p className="text-[#f2efe8]/70">{formatDateTime(r.creadaEn)}</p>
                       </div>
+                      {r.alergenos && (
+                        <div className="col-span-full">
+                          <p className="text-[10px] uppercase tracking-wider text-[#f2efe8]/30 mb-1">Alérgenos</p>
+                          <p className="text-[#cf5f56]/80">{r.alergenos}</p>
+                        </div>
+                      )}
                       {r.notas && (
                         <div className="col-span-full">
                           <p className="text-[10px] uppercase tracking-wider text-[#f2efe8]/30 mb-1">Notas</p>
@@ -440,8 +507,8 @@ function NewReservationForm({ onClose, onSave }: {
 }) {
   const [form, setForm] = useState({
     nombreCliente: '', telefono: '', personas: 2,
-    fecha: '', hora: '', zona: 'salon_interno' as Zone,
-    ocasionEspecial: '', notas: '',
+    fecha: '', hora: '',
+    ocasionEspecial: '', alergenos: '', notas: '',
   })
 
   function set(key: string, val: string | number) {
@@ -462,9 +529,10 @@ function NewReservationForm({ onClose, onSave }: {
       fechaInicio,
       fechaFin: end.toISOString().replace('.000Z', ''),
       estado: 'confirmada',
-      zona: form.zona,
+      zona: 'salon_interno',
       mesas: [],
       ocasionEspecial: form.ocasionEspecial || undefined,
+      alergenos: form.alergenos || undefined,
       estadoPago: 'sin_pago',
       notas: form.notas || undefined,
       fuente: 'admin',
@@ -503,20 +571,21 @@ function NewReservationForm({ onClose, onSave }: {
                  className="input-base" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-[#f2efe8]/45">Zona</label>
+          <label className="text-[10px] uppercase tracking-wider text-[#f2efe8]/45">Ocasión especial</label>
           <div className="relative">
-            <select value={form.zona} onChange={e => set('zona', e.target.value)}
+            <select value={form.ocasionEspecial} onChange={e => set('ocasionEspecial', e.target.value)}
                     className="input-base pr-7 appearance-none cursor-pointer w-full">
-              <option value="salon_interno">Salón Interno</option>
-              <option value="terraza">Terraza</option>
+              {OCASION_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#f2efe8]/40 pointer-events-none" />
           </div>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-[#f2efe8]/45">Ocasión especial</label>
-          <input value={form.ocasionEspecial} onChange={e => set('ocasionEspecial', e.target.value)}
-                 className="input-base" placeholder="Cumpleaños, aniversario…" />
+        <div className="col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-[#f2efe8]/45">Alérgenos</label>
+          <input value={form.alergenos} onChange={e => set('alergenos', e.target.value)}
+                 className="input-base" placeholder="Gluten, mariscos, frutos secos…" />
         </div>
         <div className="col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-[#f2efe8]/45">Notas</label>

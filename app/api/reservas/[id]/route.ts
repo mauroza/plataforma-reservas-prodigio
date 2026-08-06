@@ -12,6 +12,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     estado?: string
     estadoPago?: string
     notas?: string
+    alergenos?: string
+    ocasionEspecial?: string
     mesas?: string[]  // nombres de mesas para reasignar
   }
 
@@ -22,6 +24,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.estado)     data.estado     = body.estado
   if (body.estadoPago) data.estadoPago = body.estadoPago
   if (body.notas !== undefined) data.notas = body.notas
+  if (body.alergenos !== undefined) data.alergenos = body.alergenos
+  if (body.ocasionEspecial !== undefined) data.ocasionEspecial = body.ocasionEspecial
 
   // Reasignación de mesas
   if (body.mesas && body.mesas.length > 0) {

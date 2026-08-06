@@ -149,11 +149,8 @@ export async function GET(req: Request) {
     respuesta.requiereAbono = true
     respuesta.montoAbono = ABONO_RESERVA
     respuesta.infoPago = {
-      banco: 'Bancolombia',
-      tipoCuenta: 'Ahorros',
-      numeroCuenta: '37363488359',
+      llave: '320 633 9067',
       titular: 'Prodigio Gastro Bar',
-      alternativa: 'También puedes solicitar nuestro QR para pagar por Bre-B',
     }
   }
 

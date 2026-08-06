@@ -36,6 +36,7 @@ export interface Reserva {
   zona: Zone
   mesas: string[]
   ocasionEspecial?: string
+  alergenos?: string
   estadoPago: PaymentStatus
   notas?: string
   fuente: ReservationSource
@@ -58,6 +59,26 @@ export interface Evento {
   notas?: string
   estado: EventStatus
   creadaEn: string
+}
+
+export interface Paquete {
+  id: string
+  nombre: string
+  descripcion?: string
+  costo: number
+  activo: boolean
+  creadaEn: string
+}
+
+export interface VentaPaquete {
+  id: string
+  packageId: string
+  paqueteNombre: string
+  cliente?: string
+  cantidad: number
+  montoTotal: number
+  fecha: string
+  notas?: string
 }
 
 export interface AIMetrics {
