@@ -6,8 +6,13 @@ function auth(req: Request) {
 }
 
 // GET /api/n8n/noshow
-// Devuelve reservas que iniciaron hace 10+ min y siguen en pendiente/confirmada
-// El agente n8n debe mandar un mensaje al cliente; si no responde en 5 min, marcar no_asistio
+// Política del cliente (Respuestas Software.docx, sección 9):
+//   - A los 10 min de retraso: se manda un mensaje preguntando si viene en camino.
+//   - Si no responde en 5 min más (15 min de retraso total): se libera la mesa.
+// Esta ruta devuelve dos listas separadas para que n8n las procese en un solo llamado:
+//   - noShows: reservas que ACABAN de cruzar los 10 min → mandar el mensaje "¿vienes en camino?"
+//   - liberar: reservas que YA recibieron ese mensaje y llevan 15+ min de retraso sin resolverse
+//              → n8n debe hacer PATCH acá mismo (accion:"liberar") para marcarlas no_asistio
 export async function GET(req: Request) {
   if (!auth(req)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
@@ -34,6 +39,19 @@ export async function GET(req: Request) {
     })
   }
 
+  // Reservas que ya recibieron el mensaje de los 10 min y llevan 15+ min de retraso —
+  // nadie las confirmó ni canceló, toca liberar la mesa.
+  const paraLiberar = await prisma.reservation.findMany({
+    where: {
+      estado:        { in: ['confirmada', 'pendiente'] },
+      fechaInicio:   { lte: hace15 },
+      noShowMsgSent: true,
+    },
+    include: {
+      tables: { include: { table: { select: { nombre: true } } } },
+    },
+  })
+
   return NextResponse.json({
     total: candidatos.length,
     noShows: candidatos.map(r => ({
@@ -44,6 +62,16 @@ export async function GET(req: Request) {
       hora:     r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' }),
       mesas:    r.tables.map(t => t.table.nombre),
       mensaje:  `Hola ${r.nombreCliente.split(' ')[0]}, teníamos una reserva para ${r.personas} personas a las ${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })} en Prodigio. ¿Estás en camino? 🙏`,
+    })),
+    totalLiberar: paraLiberar.length,
+    liberar: paraLiberar.map(r => ({
+      id:       r.id,
+      cliente:  r.nombreCliente,
+      telefono: r.telefono,
+      personas: r.personas,
+      hora:     r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' }),
+      mesas:    r.tables.map(t => t.table.nombre),
+      mensaje:  `Hola ${r.nombreCliente.split(' ')[0]}, como no tuvimos respuesta liberamos tu mesa en Prodigio. Si aún quieres venir, escríbenos y con gusto te ayudamos a reagendar. 🙏`,
     })),
   })
 }
