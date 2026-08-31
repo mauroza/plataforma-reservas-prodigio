@@ -40,12 +40,20 @@ export function EventosView({ initialEventos }: Props) {
     [eventos, status]
   )
 
-  function confirmEvent(id: string) {
+  async function confirmEvent(id: string) {
+    await fetch(`/api/eventos/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'confirmado' }),
+    })
     setEventos(prev => prev.map(e => e.id === id ? { ...e, estado: 'confirmado' as EventStatus } : e))
     if (selected?.id === id) setSelected(prev => prev ? { ...prev, estado: 'confirmado' } : null)
   }
 
-  function cancelEvent(id: string) {
+  async function cancelEvent(id: string) {
+    await fetch(`/api/eventos/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'cancelado' }),
+    })
     setEventos(prev => prev.map(e => e.id === id ? { ...e, estado: 'cancelado' as EventStatus } : e))
     setSelected(null)
   }
@@ -334,32 +342,43 @@ function NewEventModal({ onClose, onSave }: {
     tipoEvento: 'Corporativo', opcionMenu: 'sin_definir' as Evento['opcionMenu'],
     necesidadesEspeciales: '', notas: '',
   })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState<string | null>(null)
 
   function set(k: string, v: string | number) { setForm(prev => ({ ...prev, [k]: v })) }
 
-  function save(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault()
-    const fechaInicio = `${form.fechaInicio}T${form.horaInicio}:00`
-    const fechaFin    = `${form.fechaFin}T${form.horaFin}:00`
-    const pxp = form.opcionMenu === 'menu_90k' ? 90_000 : form.opcionMenu === 'menu_75k' ? 75_000 : 0
-    const montoTotal = pxp > 0 ? pxp * Number(form.personas) : undefined
-    const nuevo: Evento = {
-      id: `e${Date.now()}`,
-      nombre: form.nombre,
-      empresaPersona: form.empresaPersona,
-      personas: Number(form.personas),
-      fechaInicio, fechaFin,
-      tipoEvento: form.tipoEvento,
-      opcionMenu: form.opcionMenu,
-      estadoPago: 'sin_pago',
-      montoTotal,
-      montoAbono: montoTotal ? montoTotal * 0.5 : undefined,
-      necesidadesEspeciales: form.necesidadesEspeciales || undefined,
-      notas: form.notas || undefined,
-      estado: 'pendiente',
-      creadaEn: new Date().toISOString(),
+    setError(null)
+    setSaving(true)
+    try {
+      const fechaInicio = `${form.fechaInicio}T${form.horaInicio}:00`
+      const fechaFin    = `${form.fechaFin}T${form.horaFin}:00`
+      const res = await fetch('/api/eventos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre:         form.nombre,
+          empresaPersona: form.empresaPersona,
+          personas:       Number(form.personas),
+          fechaInicio, fechaFin,
+          tipoEvento:     form.tipoEvento,
+          opcionMenu:     form.opcionMenu,
+          necesidadesEspeciales: form.necesidadesEspeciales || undefined,
+          notas:          form.notas || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'No se pudo crear el evento.')
+        return
+      }
+      onSave(data as Evento)
+    } catch {
+      setError('Error de conexión. Intentá de nuevo.')
+    } finally {
+      setSaving(false)
     }
-    onSave(nuevo)
   }
 
   return (
@@ -439,9 +458,16 @@ function NewEventModal({ onClose, onSave }: {
               <textarea value={form.necesidadesEspeciales} onChange={e => set('necesidadesEspeciales', e.target.value)} className="input-base resize-none" rows={2} placeholder="Decoración, música, equipo AV…" />
             </div>
           </div>
+          {error && (
+            <p className="text-xs text-[#cf5f56] bg-[#cf5f56]/10 border border-[#cf5f56]/20 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-outline flex-1">Cancelar</button>
-            <button type="submit" className="btn-gold flex-1">Crear evento</button>
+            <button type="button" onClick={onClose} className="btn-outline flex-1" disabled={saving}>Cancelar</button>
+            <button type="submit" className="btn-gold flex-1" disabled={saving}>
+              {saving ? 'Creando…' : 'Crear evento'}
+            </button>
           </div>
         </form>
       </div>

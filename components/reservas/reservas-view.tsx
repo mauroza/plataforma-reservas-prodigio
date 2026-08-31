@@ -510,35 +510,43 @@ function NewReservationForm({ onClose, onSave }: {
     fecha: '', hora: '',
     ocasionEspecial: '', alergenos: '', notas: '',
   })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState<string | null>(null)
 
   function set(key: string, val: string | number) {
     setForm(prev => ({ ...prev, [key]: val }))
   }
 
-  function save(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault()
-    const fechaInicio = `${form.fecha}T${form.hora}:00`
-    const mins = form.personas <= 2 ? 90 : form.personas <= 6 ? 120 : 150
-    const end = new Date(fechaInicio)
-    end.setMinutes(end.getMinutes() + mins)
-    const nuevaReserva: Reserva = {
-      id: `r${Date.now()}`,
-      nombreCliente: form.nombreCliente,
-      telefono: form.telefono,
-      personas: Number(form.personas),
-      fechaInicio,
-      fechaFin: end.toISOString().replace('.000Z', ''),
-      estado: 'confirmada',
-      zona: 'salon_interno',
-      mesas: [],
-      ocasionEspecial: form.ocasionEspecial || undefined,
-      alergenos: form.alergenos || undefined,
-      estadoPago: 'sin_pago',
-      notas: form.notas || undefined,
-      fuente: 'admin',
-      creadaEn: new Date().toISOString(),
+    setError(null)
+    setSaving(true)
+    try {
+      const res = await fetch('/api/reservas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombreCliente:   form.nombreCliente,
+          telefono:        form.telefono,
+          personas:        Number(form.personas),
+          fecha:           form.fecha,
+          hora:            form.hora,
+          ocasionEspecial: form.ocasionEspecial || undefined,
+          alergenos:       form.alergenos || undefined,
+          notas:           form.notas || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'No se pudo crear la reserva.')
+        return
+      }
+      onSave(data as Reserva)
+    } catch {
+      setError('Error de conexión. Intentá de nuevo.')
+    } finally {
+      setSaving(false)
     }
-    onSave(nuevaReserva)
   }
 
   return (
@@ -593,9 +601,16 @@ function NewReservationForm({ onClose, onSave }: {
                     className="input-base resize-none" rows={2} placeholder="Observaciones adicionales…" />
         </div>
       </div>
+      {error && (
+        <p className="text-xs text-[#cf5f56] bg-[#cf5f56]/10 border border-[#cf5f56]/20 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
       <div className="flex gap-3 pt-1">
-        <button type="button" onClick={onClose} className="btn-outline flex-1">Cancelar</button>
-        <button type="submit" className="btn-gold flex-1">Crear reserva</button>
+        <button type="button" onClick={onClose} className="btn-outline flex-1" disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-gold flex-1" disabled={saving}>
+          {saving ? 'Creando…' : 'Crear reserva'}
+        </button>
       </div>
     </form>
   )
