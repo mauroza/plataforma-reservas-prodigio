@@ -6,12 +6,17 @@ function auth(req: Request) {
 }
 
 // Mismos precios base que dicta el prompt del agente para eventos ≥20 personas.
-const MENU_90K_DISHES = ['lomo saltado', 'salmón a la parrilla', 'salmon a la parrilla', 'chaufa de cerdo']
+// Comparación sin tildes: el texto puede llegar con distinta codificación desde n8n/WhatsApp.
+function sinTildes(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
+const MENU_90K_DISHES = ['lomo saltado', 'salmon a la parrilla', 'chaufa de cerdo']
 const MENU_75K_DISHES = ['pollo grill jalisco', 'ensalada de pollo parrillado']
 
 function inferOpcionMenu(input?: string): 'menu_90k' | 'menu_75k' | 'sin_definir' {
   if (!input) return 'sin_definir'
-  const v = input.toLowerCase()
+  const v = sinTildes(input.toLowerCase())
   if (MENU_90K_DISHES.some(d => v.includes(d))) return 'menu_90k'
   if (MENU_75K_DISHES.some(d => v.includes(d))) return 'menu_75k'
   return 'sin_definir'
