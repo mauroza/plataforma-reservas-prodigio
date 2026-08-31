@@ -63,6 +63,9 @@ model Reservation {
   createdBy        User?    @relation("CreatedBy", fields: [createdById], references: [id])
   updatedBy        User?    @relation("UpdatedBy", fields: [updatedById], references: [id])
 
+  packageId        String?
+  package          Package? @relation(fields: [packageId], references: [id])
+
   tables           ReservationTable[]
   preOrder         PreOrder?
 }
@@ -156,6 +159,7 @@ model Package {
   updatedAt   DateTime @updatedAt
 
   ventas      PackageSale[]
+  reservas    Reservation[]
 }
 
 model PackageSale {

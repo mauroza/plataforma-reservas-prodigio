@@ -9,7 +9,10 @@ export const dynamic = 'force-dynamic'
 export default async function ReservasPage() {
   const rows = await prisma.reservation.findMany({
     orderBy: { fechaInicio: 'desc' },
-    include: { tables: { include: { table: { select: { nombre: true } } } } },
+    include: {
+      tables:  { include: { table: { select: { nombre: true } } } },
+      package: { select: { nombre: true } },
+    },
   })
 
   const reservas: Reserva[] = rows.map(r => ({
@@ -27,6 +30,8 @@ export default async function ReservasPage() {
     notas:           r.notas ?? undefined,
     fuente:          r.fuente as Reserva['fuente'],
     creadaEn:        r.createdAt.toISOString(),
+    packageId:       r.packageId ?? undefined,
+    paqueteNombre:   r.package?.nombre ?? undefined,
   }))
 
   return <ReservasView initialReservas={reservas} />

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Search, Plus, X, ChevronDown,
   Phone, Users, CalendarClock, Ban, CheckCircle2,
-  ShoppingBag, Trash2, PlusCircle, Loader2,
+  ShoppingBag, Trash2, PlusCircle, Loader2, Gift,
 } from 'lucide-react'
 import type { Reserva, ReservationStatus, Zone, PaymentStatus } from '@/types'
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/lib/utils'
 
 interface PreOrderItem { producto: string; cantidad: number; observaciones?: string }
+interface PaqueteOption { id: string; nombre: string }
 
 interface Props { initialReservas: Reserva[] }
 
@@ -60,6 +61,8 @@ export function ReservasView({ initialReservas }: Props) {
   const [loadingPO,   setLoadingPO]   = useState<string | null>(null)
   const [showPOForm,  setShowPOForm]  = useState<string | null>(null)
   const [newItem,     setNewItem]     = useState<PreOrderItem>({ producto: '', cantidad: 1 })
+  const [paquetes,    setPaquetes]    = useState<PaqueteOption[] | null>(null)
+  const [savingPkg,   setSavingPkg]   = useState<string | null>(null)
   const [isPending,   startTransition] = useTransition()
   const router = useRouter()
 
@@ -116,7 +119,38 @@ export function ReservasView({ initialReservas }: Props) {
   function toggleDetail(id: string) {
     const next = selected === id ? null : id
     setSelected(next)
-    if (next) loadPreOrder(next)
+    if (next) {
+      loadPreOrder(next)
+      loadPaquetes()
+    }
+  }
+
+  // ── Paquete de decoración ────────────────────────────────────────────────
+  async function loadPaquetes() {
+    if (paquetes !== null) return
+    try {
+      const res  = await fetch('/api/paquetes')
+      const data = await res.json()
+      setPaquetes((data.paquetes ?? []).map((p: { id: string; nombre: string }) => ({ id: p.id, nombre: p.nombre })))
+    } catch {
+      setPaquetes([])
+    }
+  }
+
+  async function setPackage(reservaId: string, packageId: string) {
+    setSavingPkg(reservaId)
+    try {
+      await fetch(`/api/reservas/${reservaId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageId: packageId || null }),
+      })
+      const nombre = paquetes?.find(p => p.id === packageId)?.nombre
+      setReservas(prev => prev.map(r => r.id === reservaId
+        ? { ...r, packageId: packageId || undefined, paqueteNombre: packageId ? nombre : undefined }
+        : r))
+    } finally {
+      setSavingPkg(null)
+    }
   }
 
   async function addPreOrderItem(reservaId: string) {
@@ -278,11 +312,18 @@ export function ReservasView({ initialReservas }: Props) {
                     <p className="text-xs text-[#f2efe8]/40 flex items-center gap-1 mt-0.5">
                       <Phone className="w-3 h-3" /> {r.telefono}
                     </p>
-                    {r.ocasionEspecial && (
-                      <span className="badge mt-1 text-[10px] px-1.5 py-px bg-[#ccc79f]/10 text-[#ccc79f] border-[#ccc79f]/20">
-                        {r.ocasionEspecial}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {r.ocasionEspecial && (
+                        <span className="badge text-[10px] px-1.5 py-px bg-[#ccc79f]/10 text-[#ccc79f] border-[#ccc79f]/20">
+                          {r.ocasionEspecial}
+                        </span>
+                      )}
+                      {r.paqueteNombre && (
+                        <span className="badge text-[10px] px-1.5 py-px bg-fuchsia-400/10 text-fuchsia-300/80 border-fuchsia-400/20 flex items-center gap-1">
+                          <Gift className="w-2.5 h-2.5" /> {r.paqueteNombre}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right min-w-[110px]">
                     <p className="text-sm text-[#f2efe8]">{formatDateTime(r.fechaInicio)}</p>
@@ -332,6 +373,11 @@ export function ReservasView({ initialReservas }: Props) {
                       <p className="font-medium text-sm text-[#f2efe8]">{r.nombreCliente}</p>
                       <p className="text-xs text-[#f2efe8]/40 mt-0.5">{formatDateTime(r.fechaInicio)} · {r.personas}p</p>
                       <p className="text-xs text-[#f2efe8]/40">{ZONE_LABEL[r.zona]} · {r.mesas.join('+')}</p>
+                      {r.paqueteNombre && (
+                        <span className="badge mt-1 text-[10px] px-1.5 py-px bg-fuchsia-400/10 text-fuchsia-300/80 border-fuchsia-400/20 inline-flex items-center gap-1">
+                          <Gift className="w-2.5 h-2.5" /> {r.paqueteNombre}
+                        </span>
+                      )}
                     </div>
                     <span className={cn('badge text-[10px] shrink-0', getReservationStatusStyle(r.estado))}>
                       {getReservationStatusLabel(r.estado)}
@@ -376,6 +422,25 @@ export function ReservasView({ initialReservas }: Props) {
                       <div>
                         <p className="text-[10px] uppercase tracking-wider text-[#f2efe8]/30 mb-1">Creada</p>
                         <p className="text-[#f2efe8]/70">{formatDateTime(r.creadaEn)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-[#f2efe8]/30 mb-1 flex items-center gap-1">
+                          <Gift className="w-3 h-3" /> Paquete de decoración
+                        </p>
+                        <div className="relative">
+                          <select
+                            value={r.packageId ?? ''}
+                            disabled={savingPkg === r.id || paquetes === null}
+                            onChange={e => setPackage(r.id, e.target.value)}
+                            className="input-base text-xs py-1.5 pr-7 appearance-none cursor-pointer w-full disabled:opacity-50"
+                          >
+                            <option value="">Sin paquete</option>
+                            {(paquetes ?? []).map(p => (
+                              <option key={p.id} value={p.id}>{p.nombre}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#f2efe8]/40 pointer-events-none" />
+                        </div>
                       </div>
                       {r.alergenos && (
                         <div className="col-span-full">

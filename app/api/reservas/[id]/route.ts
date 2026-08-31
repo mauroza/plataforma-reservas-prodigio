@@ -15,6 +15,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     alergenos?: string
     ocasionEspecial?: string
     mesas?: string[]  // nombres de mesas para reasignar
+    packageId?: string | null  // null para quitar el paquete de decoración
   }
 
   const reserva = await prisma.reservation.findUnique({ where: { id: params.id } })
@@ -26,6 +27,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.notas !== undefined) data.notas = body.notas
   if (body.alergenos !== undefined) data.alergenos = body.alergenos
   if (body.ocasionEspecial !== undefined) data.ocasionEspecial = body.ocasionEspecial
+  if (body.packageId !== undefined) data.packageId = body.packageId
 
   // Reasignación de mesas
   if (body.mesas && body.mesas.length > 0) {
@@ -42,7 +44,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const actualizada = await prisma.reservation.update({
     where: { id: params.id },
     data,
-    include: { tables: { include: { table: { select: { nombre: true } } } } },
+    include: {
+      tables:  { include: { table: { select: { nombre: true } } } },
+      package: { select: { nombre: true } },
+    },
   })
 
   return NextResponse.json({ success: true, reserva: actualizada })
@@ -58,6 +63,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     include: {
       tables:   { include: { table: { select: { nombre: true, zona: true } } } },
       preOrder: true,
+      package:  { select: { nombre: true } },
     },
   })
   if (!reserva) return NextResponse.json({ error: 'No encontrada' }, { status: 404 })

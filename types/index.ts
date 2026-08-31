@@ -41,6 +41,8 @@ export interface Reserva {
   notas?: string
   fuente: ReservationSource
   creadaEn: string
+  packageId?: string
+  paqueteNombre?: string
 }
 
 export interface Evento {
