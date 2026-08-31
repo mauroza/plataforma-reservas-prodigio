@@ -61,7 +61,7 @@ export async function GET(req: Request) {
       personas: r.personas,
       hora:     r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' }),
       mesas:    r.tables.map(t => t.table.nombre),
-      mensaje:  `Hola ${r.nombreCliente.split(' ')[0]}, teníamos una reserva para ${r.personas} personas a las ${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })} en Prodigio. ¿Estás en camino? 🙏`,
+      mensaje:  `Hola ${r.nombreCliente.split(' ')[0]} 😊 Te escribimos de Prodigio Gastro Bar — tenías reserva para ${r.personas} personas a las ${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })} y no te vimos llegar. ¿Vienes en camino? Contanos si necesitas más tiempo. 🙏`,
     })),
     totalLiberar: paraLiberar.length,
     liberar: paraLiberar.map(r => ({
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
       personas: r.personas,
       hora:     r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' }),
       mesas:    r.tables.map(t => t.table.nombre),
-      mensaje:  `Hola ${r.nombreCliente.split(' ')[0]}, como no tuvimos respuesta liberamos tu mesa en Prodigio. Si aún quieres venir, escríbenos y con gusto te ayudamos a reagendar. 🙏`,
+      mensaje:  `Hola ${r.nombreCliente.split(' ')[0]}, como no tuvimos respuesta liberamos tu mesa en Prodigio Gastro Bar para poder atender a otros clientes. Si aún quieres venir o prefieres reagendar, escríbenos y con gusto te ayudamos. 🙏`,
     })),
   })
 }

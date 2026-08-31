@@ -60,8 +60,8 @@ export async function GET(req: Request) {
       zona:     r.zona,
       mesas:    r.tables.map(t => t.table.nombre),
       mensaje:  tipo === '24h'
-        ? `Hola ${r.nombreCliente.split(' ')[0]} 👋 Te recordamos que mañana tienes una reserva en Prodigio Manizales a las ${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })} para ${r.personas} personas. ¡Te esperamos! 🍽️`
-        : `Hola ${r.nombreCliente.split(' ')[0]} 👋 Tu reserva en Prodigio es en aproximadamente 2 horas (${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })}). ¡Te esperamos pronto! 🙌`,
+        ? `Hola ${r.nombreCliente.split(' ')[0]} 😊 Te recordamos tu reserva mañana en Prodigio Gastro Bar a las ${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })} para ${r.personas} personas. ¡Te esperamos! 🍽️`
+        : `Hola ${r.nombreCliente.split(' ')[0]} 😊 Tu reserva en Prodigio Gastro Bar es en aproximadamente 2 horas (${r.fechaInicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })}). ¡Nos vemos pronto! 🙌`,
     })),
   })
 }
