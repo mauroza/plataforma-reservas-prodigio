@@ -38,10 +38,10 @@ export function puedeCombinar(nombres: string[]): boolean {
 
 // Clasificación de la reserva por número de personas
 export function clasificarReserva(personas: number): 'reserva' | 'reserva_abono' | 'evento' {
-  if (personas <= 10) return 'reserva'
+  if (personas <= 7)  return 'reserva'
   if (personas < 20)  return 'reserva_abono'
   return 'evento'
 }
 
-export const ABONO_RESERVA = 200_000   // COP — para grupos 11-19 personas
+export const ABONO_RESERVA = 200_000   // COP — para grupos 8-19 personas
 export const ABONO_EVENTO_PCT = 0.5    // 50% del total para eventos
