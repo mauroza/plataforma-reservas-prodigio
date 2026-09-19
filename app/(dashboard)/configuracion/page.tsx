@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { MapPin, Clock, Phone, Users, Info, ShieldCheck } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { DiasEspecialesManager } from '@/components/configuracion/dias-especiales-manager'
+import { PlatoSemanaManager } from '@/components/configuracion/plato-semana-manager'
 
 export const metadata: Metadata = { title: 'Configuración' }
 export const dynamic = 'force-dynamic'
@@ -32,6 +33,7 @@ const eventMenu = [
 
 export default async function ConfiguracionPage() {
   const diasEspeciales = await prisma.specialDay.findMany({ orderBy: { fecha: 'asc' } })
+  const platoSemana = await prisma.weeklyFeature.findUnique({ where: { id: 'actual' } })
 
   const diasSerializados = diasEspeciales.map(d => ({
     id:     d.id,
@@ -105,6 +107,9 @@ export default async function ConfiguracionPage() {
           ))}
         </div>
       </div>
+
+      {/* Plato de la semana — dinámico, editable */}
+      <PlatoSemanaManager initial={platoSemana ? { platoNombre: platoSemana.platoNombre, descripcion: platoSemana.descripcion ?? undefined } : null} />
 
       {/* Días especiales — dinámico con CRUD */}
       <DiasEspecialesManager initialDias={diasSerializados} />

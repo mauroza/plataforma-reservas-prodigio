@@ -139,6 +139,16 @@ model SpecialDay {
   createdAt DateTime @default(now())
 }
 
+// Fila única (id fijo "actual") con el plato/recomendación de la semana.
+// El staff la edita desde Configuración; el agente de WhatsApp la lee vía /api/n8n/plato-semana.
+model WeeklyFeature {
+  id          String   @id @default("actual")
+  platoNombre String
+  descripcion String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
