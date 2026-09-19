@@ -149,6 +149,15 @@ model WeeklyFeature {
   updatedById String?
 }
 
+// Lista editable de platos vegetarianos que el agente puede recomendar.
+// El staff la edita desde Configuración; el agente la lee vía /api/n8n/vegetarianos.
+model VegetarianOption {
+  id        String   @id @default(cuid())
+  nombre    String
+  notas     String?
+  createdAt DateTime @default(now())
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
