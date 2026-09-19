@@ -172,6 +172,7 @@ model Package {
   id          String   @id @default(cuid())
   nombre      String
   descripcion String?
+  categoria   String?  // "cumpleanos_grados" | "romantico" | null
   costo       Float
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
