@@ -178,6 +178,18 @@ model VegetarianOption {
   createdAt DateTime @default(now())
 }
 
+// Pasabocas para eventos (entradas y para compartir), editable desde Configuración.
+// El agente de WhatsApp los lee vía /api/n8n/pasabocas al ofrecer pasabocas en el flujo de eventos.
+model Pasaboca {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String?
+  precio      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?

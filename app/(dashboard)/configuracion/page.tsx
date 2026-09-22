@@ -6,6 +6,7 @@ import { PlatoSemanaManager } from '@/components/configuracion/plato-semana-mana
 import { PlatoDiaManager } from '@/components/configuracion/plato-dia-manager'
 import { FormularioManager } from '@/components/configuracion/formulario-manager'
 import { VegetarianosManager } from '@/components/configuracion/vegetarianos-manager'
+import { PasabocasManager } from '@/components/configuracion/pasabocas-manager'
 
 export const metadata: Metadata = { title: 'Configuración' }
 export const dynamic = 'force-dynamic'
@@ -40,6 +41,7 @@ export default async function ConfiguracionPage() {
   const platoDia = await prisma.dailyFeature.findUnique({ where: { id: 'actual' } })
   const formulario = await prisma.closingForm.findUnique({ where: { id: 'actual' } })
   const vegetarianos = await prisma.vegetarianOption.findMany({ orderBy: { createdAt: 'asc' } })
+  const pasabocas = await prisma.pasaboca.findMany({ orderBy: { createdAt: 'asc' } })
 
   const diasSerializados = diasEspeciales.map(d => ({
     id:     d.id,
@@ -125,6 +127,9 @@ export default async function ConfiguracionPage() {
 
       {/* Opciones vegetarianas — dinámico con CRUD */}
       <VegetarianosManager initialOpciones={vegetarianos} />
+
+      {/* Pasabocas para eventos — dinámico con CRUD */}
+      <PasabocasManager initialPasabocas={pasabocas} />
 
       {/* Días especiales — dinámico con CRUD */}
       <DiasEspecialesManager initialDias={diasSerializados} />
