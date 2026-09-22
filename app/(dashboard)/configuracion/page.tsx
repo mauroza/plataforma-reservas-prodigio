@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { DiasEspecialesManager } from '@/components/configuracion/dias-especiales-manager'
 import { PlatoSemanaManager } from '@/components/configuracion/plato-semana-manager'
 import { PlatoDiaManager } from '@/components/configuracion/plato-dia-manager'
+import { FormularioManager } from '@/components/configuracion/formulario-manager'
 import { VegetarianosManager } from '@/components/configuracion/vegetarianos-manager'
 
 export const metadata: Metadata = { title: 'Configuración' }
@@ -37,6 +38,7 @@ export default async function ConfiguracionPage() {
   const diasEspeciales = await prisma.specialDay.findMany({ orderBy: { fecha: 'asc' } })
   const platoSemana = await prisma.weeklyFeature.findUnique({ where: { id: 'actual' } })
   const platoDia = await prisma.dailyFeature.findUnique({ where: { id: 'actual' } })
+  const formulario = await prisma.closingForm.findUnique({ where: { id: 'actual' } })
   const vegetarianos = await prisma.vegetarianOption.findMany({ orderBy: { createdAt: 'asc' } })
 
   const diasSerializados = diasEspeciales.map(d => ({
@@ -114,6 +116,9 @@ export default async function ConfiguracionPage() {
 
       {/* Plato del día — dinámico, editable */}
       <PlatoDiaManager initial={platoDia ? { platoNombre: platoDia.platoNombre, descripcion: platoDia.descripcion ?? undefined } : null} />
+
+      {/* Formulario de cierre — dinámico, editable */}
+      <FormularioManager initial={formulario ? { url: formulario.url, descripcion: formulario.descripcion ?? undefined } : null} />
 
       {/* Plato de la semana — dinámico, editable */}
       <PlatoSemanaManager initial={platoSemana ? { platoNombre: platoSemana.platoNombre, descripcion: platoSemana.descripcion ?? undefined } : null} />

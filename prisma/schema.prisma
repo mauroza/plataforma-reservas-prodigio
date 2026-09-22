@@ -159,6 +159,16 @@ model DailyFeature {
   updatedById String?
 }
 
+// Fila única (id fijo "actual") con el link del formulario/encuesta que se manda al confirmar una reserva.
+// El staff la edita desde Configuración; el agente de WhatsApp la lee vía /api/n8n/formulario.
+model ClosingForm {
+  id          String   @id @default("actual")
+  url         String
+  descripcion String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+}
+
 // Lista editable de platos vegetarianos que el agente puede recomendar.
 // El staff la edita desde Configuración; el agente la lee vía /api/n8n/vegetarianos.
 model VegetarianOption {
