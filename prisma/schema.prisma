@@ -225,3 +225,38 @@ model PackageSale {
   notas      String?
   createdAt  DateTime @default(now())
 }
+
+// Carta del restaurante. Nombre/precio/descripcion/categoria vienen de Cluvi (se refrescan con "Sincronizar").
+// Los campos propios (alergenos, vegetariano, picante, paraCompartir, notaAgente, disponibleHoy)
+// los edita el staff en el dashboard y la sincronizacion NUNCA los pisa. El agente de WhatsApp lee esto
+// vía /api/n8n/menu.
+model MenuItem {
+  id            String   @id @default(cuid())
+  cluviId       String   @unique
+  nombre        String
+  descripcion   String?
+  precio        Float    @default(0)
+  categoria     String
+  subcategoria  String?
+  orden         Int      @default(0)
+  imagenUrl     String?
+  esAlcoholico  Boolean  @default(false)
+  esNuevo       Boolean  @default(false)
+
+  // Campos propios del dashboard (no los pisa la sincronizacion)
+  alergenos     String?
+  vegetariano   Boolean  @default(false)
+  picante       Boolean  @default(false)
+  paraCompartir Boolean  @default(false)
+  notaAgente    String?
+  disponibleHoy Boolean  @default(true)
+
+  // Estado respecto a Cluvi
+  enCluvi       Boolean  @default(true)
+  agotadoCluvi  Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([categoria])
+}
