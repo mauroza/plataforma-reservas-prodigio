@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { UtensilsCrossed, RefreshCw, Search, Pencil, Leaf, Flame, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,8 +11,6 @@ export interface MenuItemDTO {
   precio: number
   categoria: string
   subcategoria: string | null
-  orden: number
-  esAlcoholico: boolean
   esNuevo: boolean
   alergenos: string | null
   vegetariano: boolean
@@ -41,16 +38,17 @@ const normalizar = (s: string) =>
 const formatCOP = (n: number) =>
   n.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
-export function MenuView({ initialItems }: Props) {
-  const [items, setItems]       = useState(initialItems)
-  const [busqueda, setBusqueda] = useState('')
+const SIN_CATEGORIA = 'Sin categoría'
+
+export function MenuManager({ initialItems }: Props) {
+  const [items, setItems]         = useState(initialItems)
+  const [busqueda, setBusqueda]   = useState('')
   const [categoria, setCategoria] = useState('todas')
   const [editandoId, setEditandoId] = useState<string | null>(null)
-  const [form, setForm]         = useState<EditForm | null>(null)
+  const [form, setForm]           = useState<EditForm | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [sincronizando, setSincronizando] = useState(false)
-  const [mensaje, setMensaje]   = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
-  const router = useRouter()
+  const [mensaje, setMensaje]     = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
 
   const categorias = useMemo(() => {
     const mapa = new Map<string, number>()
@@ -85,7 +83,6 @@ export function MenuView({ initialItems }: Props) {
         tipo: 'ok',
         texto: `Sincronizado: ${data.total} platos (${data.creados} nuevos, ${data.actualizados} actualizados, ${data.marcadosFueraDeCluvi} ya no están en Cluvi).`,
       })
-      router.refresh()
     } catch {
       setMensaje({ tipo: 'error', texto: 'No se pudo conectar con Cluvi. Intenta de nuevo.' })
     } finally {
@@ -139,80 +136,64 @@ export function MenuView({ initialItems }: Props) {
   let ultimoGrupo = ''
 
   return (
-    <div className="max-w-5xl space-y-5 animate-fade-in">
-      <div className="card p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <UtensilsCrossed className="w-4 h-4 text-[#ccc79f]" />
-              <h1 className="text-sm font-semibold text-[#f2efe8]">Menú del restaurante</h1>
-            </div>
-            <p className="text-xs text-[#f2efe8]/45 max-w-xl">
-              Nombres, precios y descripciones vienen de Cluvi. Acá agregás lo que Cluvi no tiene
-              (alérgenos, vegetariano, picante, notas) y marcás lo que no hay hoy. Mariana consulta esta lista.
-            </p>
+    <div className="card p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <UtensilsCrossed className="w-4 h-4 text-[#ccc79f]" />
+            <h2 className="text-sm font-semibold text-[#f2efe8]">Menú completo</h2>
           </div>
-          <button onClick={sincronizar} disabled={sincronizando} className="btn-gold">
-            <RefreshCw className={cn('w-4 h-4', sincronizando && 'animate-spin')} />
-            {sincronizando ? 'Sincronizando…' : 'Sincronizar con Cluvi'}
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-4 mt-4 text-xs text-[#f2efe8]/55">
-          <span>{items.length} platos</span>
-          <span>{noDisponibles} marcados como no disponibles hoy</span>
-        </div>
-
-        {mensaje && (
-          <p className={cn('mt-3 text-xs', mensaje.tipo === 'ok' ? 'text-[#95be9a]' : 'text-[#cf5f56]')}>
-            {mensaje.texto}
+          <p className="text-xs text-[#f2efe8]/40 max-w-xl">
+            Mariana recibe esta carta en cada conversación y no recomienda ni confirma nada que no esté acá.
+            Nombres, precios y descripciones vienen de Cluvi; vos agregás alérgenos, etiquetas y notas, y marcás lo que no hay hoy.
           </p>
-        )}
+        </div>
+        <button onClick={sincronizar} disabled={sincronizando} className="btn-gold">
+          <RefreshCw className={cn('w-4 h-4', sincronizando && 'animate-spin')} />
+          {sincronizando ? 'Sincronizando…' : 'Sincronizar con Cluvi'}
+        </button>
       </div>
 
+      <p className="text-xs text-[#f2efe8]/55 mb-3">
+        {items.length} platos · {noDisponibles} marcados como no disponibles hoy
+      </p>
+      {mensaje && (
+        <p className={cn('mb-3 text-xs', mensaje.tipo === 'ok' ? 'text-[#95be9a]' : 'text-[#cf5f56]')}>{mensaje.texto}</p>
+      )}
+
       {items.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="rounded-xl border border-[#ccc79f]/15 p-6 text-center">
           <p className="text-sm text-[#f2efe8]/70">Todavía no hay platos cargados.</p>
           <p className="text-xs text-[#f2efe8]/40 mt-1">Tocá &quot;Sincronizar con Cluvi&quot; para traer la carta.</p>
         </div>
       ) : (
-        <>
-          <div className="card p-4 space-y-3">
-            <div className="relative">
-              <Search className="w-4 h-4 text-[#f2efe8]/35 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
-                className="input-base pl-9"
-                placeholder="Buscar plato, ingrediente o subcategoría…"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="w-4 h-4 text-[#f2efe8]/35 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              className="input-base pl-9"
+              placeholder="Buscar plato, ingrediente o subcategoría…"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {[['todas', `Todas (${items.length})`] as const, ...categorias.map(([n, c]) => [n, `${n} (${c})`] as const)].map(([valor, etiqueta]) => (
               <button
-                onClick={() => setCategoria('todas')}
+                key={valor}
+                onClick={() => setCategoria(valor)}
                 className={cn('px-3 py-1 rounded-full text-xs border transition-colors',
-                  categoria === 'todas'
+                  categoria === valor
                     ? 'bg-[#ccc79f]/15 border-[#ccc79f]/40 text-[#ccc79f]'
                     : 'border-[#ccc79f]/15 text-[#f2efe8]/55 hover:text-[#f2efe8]')}
               >
-                Todas ({items.length})
+                {etiqueta}
               </button>
-              {categorias.map(([nombre, cantidad]) => (
-                <button
-                  key={nombre}
-                  onClick={() => setCategoria(nombre)}
-                  className={cn('px-3 py-1 rounded-full text-xs border transition-colors',
-                    categoria === nombre
-                      ? 'bg-[#ccc79f]/15 border-[#ccc79f]/40 text-[#ccc79f]'
-                      : 'border-[#ccc79f]/15 text-[#f2efe8]/55 hover:text-[#f2efe8]')}
-                >
-                  {nombre} ({cantidad})
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
-          <div className="card divide-y divide-[rgba(204,199,159,0.08)]">
+          <div className="rounded-xl border border-[#ccc79f]/10 divide-y divide-[rgba(204,199,159,0.08)] max-h-[640px] overflow-y-auto">
             {filtrados.length === 0 && (
               <p className="p-6 text-sm text-[#f2efe8]/50 text-center">Ningún plato coincide con la búsqueda.</p>
             )}
@@ -221,14 +202,15 @@ export function MenuView({ initialItems }: Props) {
               const mostrarGrupo = grupo !== ultimoGrupo
               ultimoGrupo = grupo
               const editando = editandoId === it.id
+              const sinCategoria = it.categoria === SIN_CATEGORIA
               return (
                 <div key={it.id}>
                   {mostrarGrupo && (
-                    <div className="px-5 py-2 bg-[rgba(0,0,0,0.18)] text-[10px] uppercase tracking-wider text-[#ccc79f]/70">
+                    <div className="px-4 py-2 bg-[rgba(0,0,0,0.18)] text-[10px] uppercase tracking-wider text-[#ccc79f]/70 sticky top-0">
                       {grupo}
                     </div>
                   )}
-                  <div className={cn('px-5 py-3 flex items-start gap-4', !it.enCluvi && 'opacity-50')}>
+                  <div className={cn('px-4 py-3 flex items-start gap-4', (!it.enCluvi || sinCategoria) && 'opacity-55')}>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium text-[#f2efe8]">{it.nombre}</p>
@@ -239,11 +221,13 @@ export function MenuView({ initialItems }: Props) {
                         {it.paraCompartir && <Users className="w-3.5 h-3.5 text-[#ccc79f]" aria-label="Para compartir" />}
                         {!it.enCluvi && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#cf5f56]/15 text-[#cf5f56]">Ya no está en Cluvi</span>}
                         {it.agotadoCluvi && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#cf5f56]/15 text-[#cf5f56]">Agotado en Cluvi</span>}
-                        {it.precio <= 0 && it.enCluvi && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f2efe8]/10 text-[#f2efe8]/55">Mariana no lo usa (sin precio)</span>}
+                        {it.enCluvi && (sinCategoria || it.precio <= 0) && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f2efe8]/10 text-[#f2efe8]/55">
+                            Mariana no lo usa ({sinCategoria ? 'sin categoría en Cluvi' : 'sin precio'})
+                          </span>
+                        )}
                       </div>
-                      {it.descripcion && (
-                        <p className="text-xs text-[#f2efe8]/50 mt-1 line-clamp-2">{it.descripcion}</p>
-                      )}
+                      {it.descripcion && <p className="text-xs text-[#f2efe8]/50 mt-1 line-clamp-2">{it.descripcion}</p>}
                       {(it.alergenos || it.notaAgente) && (
                         <p className="text-xs text-[#ccc79f]/75 mt-1">
                           {it.alergenos && <span>Alérgenos: {it.alergenos}. </span>}
@@ -279,7 +263,7 @@ export function MenuView({ initialItems }: Props) {
                   </div>
 
                   {editando && form && (
-                    <div className="px-5 pb-4 space-y-3 bg-[rgba(0,0,0,0.12)]">
+                    <div className="px-4 pb-4 space-y-3 bg-[rgba(0,0,0,0.12)]">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
                         <div className="space-y-1.5">
                           <label className="text-[10px] uppercase tracking-wider text-[#f2efe8]/45">Alérgenos / contiene</label>
@@ -326,7 +310,7 @@ export function MenuView({ initialItems }: Props) {
               )
             })}
           </div>
-        </>
+        </div>
       )}
     </div>
   )

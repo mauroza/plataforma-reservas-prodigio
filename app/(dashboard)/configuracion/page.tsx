@@ -7,6 +7,7 @@ import { PlatoDiaManager } from '@/components/configuracion/plato-dia-manager'
 import { FormularioManager } from '@/components/configuracion/formulario-manager'
 import { VegetarianosManager } from '@/components/configuracion/vegetarianos-manager'
 import { PasabocasManager } from '@/components/configuracion/pasabocas-manager'
+import { MenuManager } from '@/components/configuracion/menu-manager'
 
 export const metadata: Metadata = { title: 'Configuración' }
 export const dynamic = 'force-dynamic'
@@ -42,6 +43,7 @@ export default async function ConfiguracionPage() {
   const formulario = await prisma.closingForm.findUnique({ where: { id: 'actual' } })
   const vegetarianos = await prisma.vegetarianOption.findMany({ orderBy: { createdAt: 'asc' } })
   const pasabocas = await prisma.pasaboca.findMany({ orderBy: { createdAt: 'asc' } })
+  const menuItems = await prisma.menuItem.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] })
 
   const diasSerializados = diasEspeciales.map(d => ({
     id:     d.id,
@@ -130,6 +132,27 @@ export default async function ConfiguracionPage() {
 
       {/* Pasabocas para eventos — dinámico con CRUD */}
       <PasabocasManager initialPasabocas={pasabocas} />
+
+      {/* Menú completo — se sincroniza con Cluvi y el agente lo recibe en cada mensaje */}
+      <MenuManager
+        initialItems={menuItems.map(m => ({
+          id: m.id,
+          nombre: m.nombre,
+          descripcion: m.descripcion,
+          precio: m.precio,
+          categoria: m.categoria,
+          subcategoria: m.subcategoria,
+          esNuevo: m.esNuevo,
+          alergenos: m.alergenos,
+          vegetariano: m.vegetariano,
+          picante: m.picante,
+          paraCompartir: m.paraCompartir,
+          notaAgente: m.notaAgente,
+          disponibleHoy: m.disponibleHoy,
+          enCluvi: m.enCluvi,
+          agotadoCluvi: m.agotadoCluvi,
+        }))}
+      />
 
       {/* Días especiales — dinámico con CRUD */}
       <DiasEspecialesManager initialDias={diasSerializados} />
